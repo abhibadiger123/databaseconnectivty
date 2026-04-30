@@ -1,111 +1,233 @@
--- 1. DATABASE INITIALIZATION
-CREATE DATABASE TechImpact;
-USE TechImpact;
+# 📘 SQL Practice README – Company Database
 
--- 2. CREATE TABLES (Primary structures)
-CREATE TABLE employee (
-  emp_id INT PRIMARY KEY AUTO_INCREMENT,
-  first_name VARCHAR(40),
-  last_name VARCHAR(40),
-  birth_day DATE,
-  sex VARCHAR(1),
-  salary INT,
-  super_id INT,
-  branch_id INT 
-);
+---
 
-CREATE TABLE branch (
-  branch_id INT PRIMARY KEY,
-  branch_name VARCHAR(40),
-  mgr_id INT,
-  mgr_start_date DATE,
-  FOREIGN KEY(mgr_id) REFERENCES employee(emp_id) ON DELETE SET NULL
-);
+## 🧭 Introduction
 
--- 3. DEFINE RELATIONSHIPS (Circular Foreign Keys)
-ALTER TABLE employee ADD FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE SET NULL;
-ALTER TABLE employee ADD FOREIGN KEY(super_id) REFERENCES employee(emp_id) ON DELETE SET NULL;
+This document captures the SQL queries executed on a sample company database named `tech`, along with a clear step-by-step flow of what was done. It serves as both a learning reference and a revision guide.
 
-CREATE TABLE client (
-  client_id INT PRIMARY KEY,
-  client_name VARCHAR(40),
-  branch_id INT,
-  FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE SET NULL
-);
+The database includes:
 
-CREATE TABLE works_with (
-  emp_id INT,
-  client_id INT,
-  total_sales INT,
-  PRIMARY KEY(emp_id, client_id),
-  FOREIGN KEY(emp_id) REFERENCES employee(emp_id) ON DELETE CASCADE,
-  FOREIGN KEY(client_id) REFERENCES client(client_id) ON DELETE CASCADE
-);
+* `employee`
+* `branch`
+* `client`
+* `branch_supplier`
+* `works_on`
 
-CREATE TABLE branch_supplier (
-  branch_id INT,
-  supplier_name VARCHAR(40),
-  supply_type VARCHAR(40),
-  PRIMARY KEY(branch_id, supplier_name),
-  FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE CASCADE
-);
+---
 
--- 4. INSERT DATA (Corporate & Scranton Branches)
-INSERT INTO employee VALUES(100, 'David', 'Wallace', '1967-11-17', 'M', 250000, NULL, NULL);
-INSERT INTO branch VALUES(1, 'Corporate', 100, '2006-02-09');
+## 🪜 Step-by-Step Process
 
-UPDATE employee SET branch_id = 1 WHERE emp_id = 100;
+### ✅ Step 1: Select the Database
 
-INSERT INTO employee VALUES(101, 'Jan', 'Levinson', '1961-05-11', 'F', 110000, 100, 1);
-INSERT INTO employee VALUES(102, 'Michael', 'Scott', '1964-03-15', 'M', 75000, 100, NULL);
-INSERT INTO branch VALUES(2, 'Scranton', 102, '1992-04-06');
+Started by selecting the database to work on.
 
-UPDATE employee SET branch_id = 2 WHERE emp_id = 102;
+```sql
+USE tech;
+```
 
-INSERT INTO employee VALUES(103, 'Angela', 'Martin', '1971-06-25', 'F', 63000, 102, 2);
-INSERT INTO employee VALUES(104, 'Kelly', 'Kapoor', '1980-02-05', 'F', 55000, 102, 2);
-INSERT INTO employee VALUES(105, 'Stanley', 'Hudson', '1958-02-19', 'M', 69000, 102, 2);
+---
 
--- 5. INSERT DATA (Stamford & Buffalo Branches)
-INSERT INTO employee VALUES(106, 'Josh', 'Porter', '1969-09-05', 'M', 78000, 100, NULL);
-INSERT INTO branch VALUES(3, 'Stamford', 106, '1998-02-13');
+### ✅ Step 2: Perform Aggregation Queries
 
-UPDATE employee SET branch_id = 3 WHERE emp_id = 106;
+Counted employees based on gender and applied grouping.
 
-INSERT INTO employee VALUES(107, 'Andy', 'Bernard', '1973-07-22', 'M', 65000, 106, 3);
-INSERT INTO employee VALUES(108, 'Jim', 'Halpert', '1978-10-01', 'M', 71000, 106, 3);
-INSERT INTO branch VALUES(4, "Buffalo", NULL, NULL);
+```sql
+SELECT COUNT(sex) FROM employee GROUP BY sex;
 
--- 6. INSERT SUPPLIER & CLIENT DATA
-INSERT INTO branch_supplier VALUES(2, 'Hammer Mill', 'Paper'), (2, 'Uni-ball', 'Writing Utensils'), (3, 'Patriot Paper', 'Paper'), (2, 'J.T. Forms & Labels', 'Custom Forms'), (3, 'Uni-ball', 'Writing Utensils'), (3, 'Hammer Mill', 'Paper'), (3, 'Stamford Lables', 'Custom Forms');
+SELECT COUNT(sex), sex FROM employee GROUP BY sex;
 
-INSERT INTO client VALUES(400, 'Dunmore Highschool', 2), (401, 'Lackawana Country', 2), (402, 'FedEx', 3), (403, 'John Daly Law, LLC', 3), (404, 'Scranton Whitepages', 2), (405, 'Times Newspaper', 3), (406, 'FedEx', 2);
+SELECT COUNT(emp_id) 
+FROM employee  
+WHERE sex IN ("M", "F");
+```
 
--- 7. INSERT SALES DATA
-INSERT INTO works_with VALUES(105, 400, 55000), (102, 401, 267000), (108, 402, 22500), (107, 403, 5000), (108, 403, 12000), (105, 404, 33000), (107, 405, 26000), (102, 406, 15000), (105, 406, 130000);
+✔️ Learned:
 
--- 8. ANALYTICAL QUERIES
--- Total Headcount and Financials
-SELECT COUNT(emp_id) AS Total_Employees FROM employee;
-SELECT AVG(salary) AS Average_Salary, SUM(salary) AS Total_Payroll FROM employee;
-SELECT sex, COUNT(sex) FROM employee GROUP BY sex;
+* How to use `COUNT()`
+* How `GROUP BY` works
+* How to filter using `IN`
 
--- Sales Analysis
-SELECT emp_id, SUM(total_sales) FROM works_with GROUP BY emp_id;
-SELECT client_id, SUM(total_sales) FROM works_with GROUP BY client_id;
+---
 
--- Joins
-SELECT branch.branch_id, branch_name, first_name AS Manager_Name 
+### ✅ Step 3: Apply Filtering with LIKE
+
+Tried filtering client names using pattern matching.
+
+```sql
+SELECT * FROM client WHERE client_name LIKE 'LLC';
+```
+
+✔️ Understood:
+
+* `'LLC'` → exact match
+* `'%LLC'` → ends with LLC
+* `'LLC%'` → starts with LLC
+* `'%LLC%'` → contains LLC
+
+---
+
+### ✅ Step 4: Retrieve All Data
+
+Fetched all records from the `client` table.
+
+```sql
+SELECT * FROM client;
+```
+
+✔️ Learned basic data retrieval.
+
+---
+
+### ✅ Step 5: Use UNION (Combine Results)
+
+Combined employee names and branch names into one result.
+
+```sql
+SELECT employee.first_name FROM employee
+UNION
+SELECT branch.branch_name FROM branch;
+```
+
+✔️ Learned:
+
+* How `UNION` merges results
+* Removes duplicates automatically
+
+---
+
+### ✅ Step 6: Explore Table Structure
+
+Checked table structures before applying joins.
+
+```sql
+DESC branch;
+SELECT * FROM employee;
+```
+
+✔️ Important before joins to understand columns.
+
+---
+
+### ✅ Step 7: Perform INNER JOINs
+
+Fetched common data across tables.
+
+```sql
+SELECT branch.branch_id, branch_name, first_name, salary 
 FROM employee 
-INNER JOIN branch ON employee.emp_id = branch.mgr_id;
+INNER JOIN branch 
+ON employee.emp_id = branch.mgr_id;
 
--- Subquery Example
-SELECT * FROM employee 
-WHERE emp_id IN (SELECT DISTINCT emp_id FROM works_with WHERE total_sales > 50000);
+SELECT client.client_name, branch.branch_name 
+FROM branch 
+INNER JOIN client 
+ON branch.branch_id = client.branch_id;
 
+SELECT branch.branch_id, branch_supplier.supplier_name, branch.branch_name
+FROM branch 
+INNER JOIN branch_supplier 
+ON branch_supplier.branch_id = branch.branch_id;
+```
 
+✔️ Learned:
 
+* How to connect tables
+* How relationships work
 
+---
 
+### ✅ Step 8: Perform LEFT JOIN
 
+Fetched all records from left table and matching from right.
 
+```sql
+SELECT branch.branch_name, branch_supplier.supplier_name 
+FROM branch_supplier 
+LEFT JOIN branch 
+ON branch_supplier.branch_id = branch.branch_id;
+```
+
+✔️ Learned:
+
+* Keeps all left table data
+
+---
+
+### ✅ Step 9: Perform RIGHT JOIN
+
+Fetched all records from right table and matching from left.
+
+```sql
+SELECT branch.branch_name, branch_supplier.supplier_name 
+FROM branch_supplier 
+RIGHT JOIN branch 
+ON branch_supplier.branch_id = branch.branch_id;
+```
+
+✔️ Learned:
+
+* Keeps all right table data
+
+---
+
+### ✅ Step 10: Use Nested Query (Subquery)
+
+Fetched employees who made sales greater than 50,000.
+
+```sql
+SELECT * 
+FROM employee 
+WHERE emp_id IN (
+    SELECT DISTINCT works_on.emp_id  
+    FROM works_on 
+    WHERE works_on.total_sales > 50000
+);
+```
+
+✔️ Learned:
+
+* How subqueries work inside `WHERE`
+* Use of `IN` with nested results
+
+---
+
+### ✅ Step 11: Identify and Fix Errors
+
+❌ Incorrect:
+
+```sql
+WHERE sex IN("M" "F");
+```
+
+✅ Correct:
+
+```sql
+WHERE sex IN ("M", "F");
+```
+
+✔️ Learned:
+
+* Proper syntax in `IN` condition
+
+---
+
+## 🧠 Key Concepts Covered
+
+* Aggregation (`COUNT`)
+* Grouping (`GROUP BY`)
+* Filtering (`WHERE`, `LIKE`, `IN`)
+* Combining results (`UNION`)
+* Joins (`INNER`, `LEFT`, `RIGHT`)
+* Nested queries (Subqueries)
+
+---
+
+## 🚀 Conclusion
+
+This exercise builds a strong foundation in SQL. The step-by-step approach shows how to:
+
+* Explore data
+* Combine tables
+* Filter results
+* Solve real-world query problems
